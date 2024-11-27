@@ -17,12 +17,23 @@ def generate_randomHV(n, p):
     """
 
     m = int(n * p)  # number of 1s
-    random_HV = np.array([1] * m + [0] * (n - m))
+    random_HV = np.array([1] * m + [0] * (n - m), dtype=int)
     np.random.shuffle(random_HV)
 
     return random_HV
 
-def generate_LBPMemory(n, p, d):
+
+def bind(hv1, hv2):
+    return hv1 ^ hv2
+
+def bundle(hv_arr, n, l):
+    sum_hv = np.zeros(n, dtype=int)
+    for hv in hv_arr:
+        sum_hv += hv
+    sum_hv = np.where(sum_hv >= l/2, 1, 0)
+    return sum_hv
+
+def generate_memory(n, p, d):
     """
     Generates the item memory for 'd'-bit LBP codes with 'n'-dimension & 'p'-density hypervectors.
 
@@ -37,41 +48,34 @@ def generate_LBPMemory(n, p, d):
     Returns:
         memory_LBP : 
     """
-    num_LBP = 2**d
     
-    memory_LBP  = np.zeros((num_LBP, n))
-    for i in range(num_LBP):
-        memory_LBP[i] = generate_randomHV(n, p)
+    memory = np.zeros((d, n), dtype=int)
+    for i in range(d):
+        memory[i] = generate_randomHV(n, p)
 
-    return memory_LBP 
-
-
+    return memory
 
 
-def extract_LBP(window, memory_LBP):
+def get_LBP(window, memory_LBP, d, i):
     val_LBP = ""
 
-    for i in range(len(window)):
-
-        if i == 0:
-            continue
+    for j in range(-d+1, 1):
+        if window[(j+i)-1] > window[(j+i)]:
+            val_LBP += "0"
+        elif window[(j+i)-1] < window[(j+i)]:
+            val_LBP += "1"
         else:
-            if window[i-1] > window[i]:
-                val_LBP += "0"
-            elif window[i-1] < window[i]:
-                val_LBP += "1"
-            else:
-                val_LBP += str(random.randint(0,1))
+            val_LBP += str(random.randint(0,1))
 
     val_LBP = int(val_LBP, base=2)
 
     return memory_LBP[val_LBP]
 
-def extract_lineLength(window):
+def get_lineLength(window):
     return
 
-def extract_meanAmp(window):
+def get_meanAmp(window):
     return
 
-def extract_bandPower(window):
+def get_bandPower(window):
     return
