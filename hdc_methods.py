@@ -30,12 +30,21 @@ def bundle(hv_arr, n, l):
     sum_hv = np.zeros(n, dtype=int)
     for hv in hv_arr:
         sum_hv += hv
-    sum_hv = np.where(sum_hv >= l/2, 1, 0)
+
+    with np.nditer(sum_hv, op_flags=['readwrite']) as it:
+        for x in it:
+            if x > l/2:
+                x[...] = 1
+            elif x == l/2:
+                x[...] = random.randint(0,1)
+            else:
+                x[...] = 0
+
     return sum_hv
 
 def generate_memory(n, p, d):
     """
-    Generates the item memory for 'd'-bit LBP codes with 'n'-dimension & 'p'-density hypervectors.
+    Generates the item memory for 'd' items with 'n'-dimension & 'p'-density hypervectors.
 
     Parameters:
         n : int
@@ -46,7 +55,7 @@ def generate_memory(n, p, d):
             # of bits for LBP codes
 
     Returns:
-        memory_LBP : 
+        
     """
     
     memory = np.zeros((d, n), dtype=int)
