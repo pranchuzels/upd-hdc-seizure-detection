@@ -3,7 +3,8 @@ import mne
 import numpy as np
 import hdc_methods as hdc
 from tqdm import tqdm
-
+from multiprocessing import Pool
+from functools import partial
 
 def extract_npy(filepath):
     with open(filepath, 'rb') as f:
@@ -45,39 +46,40 @@ def process_windowHV_LBP(window_chs, memory_LBP, memory_chs, num_chs, n, window_
             hv_lbp = hdc.get_LBP(window_chs[j], memory_LBP, d, i)
             sum_hv[j] = hdc.bind(hv_lbp, memory_chs[j])
 
-        arr_sampleHVs[i-d] = hdc.bundle(sum_hv, n, num_chs)
+        arr_sampleHVs[i-d] = hdc.bundle(sum_hv, num_chs)
 
-    return hdc.bundle(arr_sampleHVs, n, window_size)
+    return hdc.bundle(arr_sampleHVs, window_size)
 
-    
+
+def _train_file_looper(index, parameters, value_chs, memory):
+    n, window_size, window_step, d, feature_set = parameters
+    num_chs = len(value_chs)
+    match feature_set:
+
+        case 1:
+            window_chs = value_chs[:, index + 1 - (window_size+d): index + 1]
+            memory_LBP, memory_chs = memory
+            hv_chs = process_windowHV_LBP(window_chs, memory_LBP, memory_chs, num_chs, n, window_size, d)
+        case 2:
+            print(1)
+        case default:
+            print(1)
+
+    return hv_chs
+
 def train_file(parameters, data, memory, label_hv, filename):
     n, window_size, window_step, d, feature_set = parameters
     name_chs, value_chs, last_samp, samp_freq = data
-    
+    window_indexes_arr = []
+    for i in range(last_samp+1):
+        if (i + 1) % window_step == d and i+d >= window_size + d:
+            window_indexes_arr.append(i)
 
-    counter_step = 0
-    window_chs = [[] for _ in range(num_chs)]
-
-    for index_curr_sample in tqdm(range(last_samp + 1), desc=filename, leave=False):
-
-        sample_chs = pop_sample(value_chs, num_chs, index_curr_sample)
-
-        window_chs = push_window(sample_chs, window_chs, num_chs, window_size+d) # TODO: Change max size if not LBP
-        counter_step += 1
-
-        if counter_step >= window_step and len(window_chs[0]) == (window_size+d): # TODO: Change size if not LBP
-            match feature_set:
-
-                case 1:
-                    memory_LBP, memory_chs = memory
-                    hv_chs = process_windowHV_LBP(window_chs, memory_LBP, memory_chs, num_chs, n, window_size, d)
-                case 2:
-                    print(1)
-                case default:
-                    print(1)
-
-            counter_step = 0
-            label_hv = hdc.bundle([hv_chs, label_hv], n, 2)
+    with Pool() as p, tqdm(total=len(window_indexes_arr), desc=filename, leave=False) as pbar:
+        for result in p.imap(partial(_train_file_looper, parameters=parameters, value_chs=value_chs, memory=memory), window_indexes_arr):
+            pbar.update()
+            pbar.refresh()
+            label_hv = hdc.bundle([result, label_hv], 2)
 
 
     return label_hv
@@ -105,7 +107,8 @@ if __name__ == "__main__":
     non_seizure_hv = np.zeros(n, dtype=int)
     np.set_printoptions(edgeitems=20)
     #train non-seizures
-    for filename in tqdm(os.listdir("chbmit-eeg-processed/non-seizures"), desc="Training all non-seizures.", leave=False):
+    non_seizure_files = os.listdir("chbmit-eeg-processed/non-seizures")
+    for filename in tqdm(non_seizure_files, desc="Training all non-seizures.", leave=False, total=len(non_seizure_files)):
         filepath = "chbmit-eeg-processed/non-seizures/" + filename
         
         name_chs, value_chs, last_samp, samp_freq = extract_npy(filepath)
