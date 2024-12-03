@@ -26,10 +26,8 @@ def generate_randomHV(n, p):
 def bind(hv1, hv2):
     return hv1 ^ hv2
 
-def bundle(hv_arr, n, l):
-    sum_hv = np.zeros(n, dtype=int)
-    for hv in hv_arr:
-        sum_hv += hv
+def bundle(hv_arr, l):
+    sum_hv = np.sum(hv_arr, axis=0)
 
     with np.nditer(sum_hv, op_flags=['readwrite']) as it:
         for x in it:
