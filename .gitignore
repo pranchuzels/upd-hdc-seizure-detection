@@ -1,2 +1,4 @@
 chbmit-eeg/
 chbmit-eeg-processed/
+chbmit-eeg-processed.*
+test.py
