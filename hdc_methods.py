@@ -50,7 +50,7 @@ def generate_memory(n, p, d):
         p : float [0, 1]
             density of hypervector
         d : int
-            # of bits for LBP codes
+            No. of bits for LBP codes
 
     Returns:
         
@@ -62,6 +62,15 @@ def generate_memory(n, p, d):
 
     return memory
 
+def generate_linearmemory(n, p, d):
+    memory = np.zeros((d, n), dtype=int)
+
+    memory[0] = generate_randomHV(n, p)
+    memory[d-1] = generate_randomHV(n, p)
+
+    num_active = int(n * p * (1 - 0.5) / (d-1))
+    # TODO: Randomize inverting <num_active> number of elements with removing(?) values  
+    return memory
 
 def get_LBP(window, memory_LBP, d, i):
     val_LBP = ""
@@ -78,7 +87,19 @@ def get_LBP(window, memory_LBP, d, i):
 
     return memory_LBP[val_LBP]
 
-def get_lineLength(window):
+def compute_similarity(hv1, hv2, n):
+    return np.sum(hv1 ^ hv2) / n
+
+def get_lineLength(window, memory_ll, d):
+    sum = 0
+    for i in range(window):
+        if i == 0:
+            continue
+        else:
+            sum += abs(window[i] - window[i-1])
+    
+    line_length = int(sum/len(window))
+    line_length
     return
 
 def get_meanAmp(window):
