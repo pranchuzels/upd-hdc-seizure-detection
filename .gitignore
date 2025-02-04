@@ -3,3 +3,5 @@ chbmit-eeg-processed/
 chbmit-eeg-processed.*
 training-data/
 test.py
+*.txt
+*.png
