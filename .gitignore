@@ -5,3 +5,5 @@ training-data/
 test.py
 *.txt
 *.png
+main_new.py
+*.csv

@@ -1,14 +1,14 @@
 import numpy as np
 import random
 import scipy.signal
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 
-def generate_randomHV(n, p):
+def generate_randomHV(n: int, p: float):
     """
     Generates a random hypervector with 'n'-dimension and 'p'-density.
 
-    Parameters:
+    ### Parameters:
         n : int
             dimension of hypervector
         p : float [0, 1]
@@ -24,28 +24,27 @@ def generate_randomHV(n, p):
     return random_HV
 
 
-def bind(hv1, hv2):
+def bind(hv1: np.ndarray, hv2: np.ndarray):
     """
     Binds two hypervectors together using XOR and returns the resulting hypervector.
 
-    Parameters:
+    ### Parameters:
         hv1, hv2 : hypervector (numpy array of integers)
             hypervectors to be bound
     """
-
     return hv1 ^ hv2
 
 
-def bundle(hv_arr, l):
+def bundle(hv_arr: np.ndarray):
     """
-    Bundles two hypervectors together and returns the resulting hypervector.
-    Results are binarized and ties are randomly broken. 
+    Bundles an array of hypervectors and returns the resulting hypervector.
+    Results are binarized according to half the length of the array and ties are randomly broken. 
 
-    Parameters:
+    ### Parameters:
         hv_arr : numpy array of hypervectors
             array of hypervectors to be bundled 
     """
-
+    l = len(hv_arr)
     sum_hv = np.sum(hv_arr, axis=0)
 
     with np.nditer(sum_hv, op_flags=['readwrite']) as it:
@@ -60,32 +59,28 @@ def bundle(hv_arr, l):
     return sum_hv
 
 
-def compute_similarity(hv1, hv2, n):
+def compute_similarity(hv1: np.ndarray, hv2: np.ndarray):
     """
     Returns the cosine similarity of two hypervectors.
 
-    Parameters:
+    ### Parameters:
         hv1, hv2 : numpy array of integers (hypervector)
             hypervectors to be computed for similarity
-        n : int
-            dimension of hypervector
     """
-    return np.sum(hv1 ^ hv2) / n
+    return np.sum(hv1 ^ hv2) / len(hv1)
 
 
-def generate_randommemory(n, p, d):
+def generate_randommemory(n: int, p: float, d: int):
     """
     Randomly generates the item memory for 'd' items with 'n'-dimension & 'p'-density hypervectors.
 
-    Parameters:
+    ### Parameters:
         n : int
             dimension of hypervector
         p : float [0, 1]
             density of hypervector
         d : int
             No. of items in memory
-
-    Returns numpy array of hypervectors. 
     """
     
     memory = np.zeros((d, n), dtype=int)
@@ -95,20 +90,18 @@ def generate_randommemory(n, p, d):
     return memory
 
 
-def generate_linearmemory(n: int, p: float, d: int) -> np.ndarray:
+def generate_linearmemory(n: int, p: float, d: int):
     """
     Generates a linear item memory with 'd' items, 'n'-dimension, & 'p'-density hypervectors.
+    First and last item will have a cosine similarity of 1.
 
-    Parameters:
+    ### Parameters:
         n : int
             dimension of hypervector
         p : float [0, 1]
             density of hypervector
         d : int
-            No. of items in memory
-
-    Returns numpy array of hypervectors.
-        
+            No. of items in memory   
     """
 
     memory = np.zeros((d, n), dtype=int)
@@ -171,7 +164,7 @@ def compute_LBP(samples):
     Returns the corresponding LBP value of an array of samples.
     LBP-bit pattern is assumed to be len(samples) - 1.
 
-    Parameters:
+    ### Parameters:
         samples : array of float
             array of samples from input window
     """
@@ -189,11 +182,37 @@ def compute_LBP(samples):
     return int(val_LBP, base=2)
 
 
+def compute_optimizedLBP(window, d):
+    """
+    Returns an array of corresponding LBP value of a window of samples.
+    Optimized for faster training time.
+
+    ### Parameters:
+        window : array of float
+            array of samples from input window
+
+        d : int
+            Number of bits for LBP.
+    """
+
+    cont_val_LBP = ""
+
+    for i in range(1, len(window)):
+        if window[i-1] > window[i]:
+            cont_val_LBP += "0"
+        elif window[i-1] < window[i]:
+            cont_val_LBP += "1"
+        else:
+            cont_val_LBP += str(random.randint(0,1)) # randomize for ties
+
+    return np.array([int(cont_val_LBP[i-(d-1):i+1], base=2) for i in range(d, len(window))], dtype=int)
+
+
 def compute_lineLength(window):
     """
     Returns the corresponding line length value given a window of samples.
 
-    Parameters:
+    ### Parameters:
         window : array of float
             array of samples in input window
     """
@@ -214,7 +233,7 @@ def compute_meanAmp(window):
     """
     Returns the corresponding mean amplitude value of a given window of samples.
 
-    ###Parameters:
+    ### Parameters:
         window : array of float
             array of samples in input window
     """
@@ -231,9 +250,10 @@ def compute_meanAmp(window):
     return mean
 
 
-def compute_bandPower(window: np.ndarray , fs: int, ws: int):
+def compute_bandPower(window: np.ndarray, fs: int, ws: int):
     """
-    Returns an array of the spectral power of EEG-relevant frequency bands  given a window of samples of one channel.
+    Returns an array of the spectral power of EEG-relevant frequency bands given a window of samples of one channel.
+
     ### Parameters:
         window : numpy ndarray floats
             array of samples in input window of an input channel
