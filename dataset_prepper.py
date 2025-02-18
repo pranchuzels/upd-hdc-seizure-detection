@@ -91,7 +91,7 @@ for i in range(len(file_seizures_arr)):
             index_exclude = set()
             for (start, end) in index_seizures_arr:
                 start = 0 if start < 256 else start - 256
-                end = last_samp if last_samp < end + 256 else end + 256
+                end = last_samp if last_samp < end + (256*15) else end + (256*15)
                 index_exclude.add(range(start, end + 1))
 
             # Randomly choose block with same length of seizure block

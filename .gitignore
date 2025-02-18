@@ -1,9 +1,12 @@
 chbmit-eeg/
 chbmit-eeg-processed/
+chbmit-eeg-processed-v*/
 chbmit-eeg-processed.*
 training-data/
+training-data-v1/
 test.py
 *.txt
 *.png
 main_new.py
 *.csv
+*.zip
