@@ -48,9 +48,9 @@ if __name__ == "__main__":
     d = 6 # LBP bit size
     num_chs = 17 # constant
     levels = 64
-    training_patients = ["chb"+str(x).zfill(2) for x in range(1, 19+1)]
-    testing_patients = ["chb"+str(x).zfill(2) for x in range(20, 24+1)]
-    training_features = [1, 2]
+    training_patients = ["chb"+str(x).zfill(2) for x in range(1, 1+1)]
+    testing_patients = ["chb"+str(x).zfill(2) for x in range(20, 1+1)]
+    training_features = [2]
     feature_array = np.array([])
     label_array = np.array([])
     feature_array_test = np.array([])
@@ -70,44 +70,51 @@ if __name__ == "__main__":
             ))
     print("#1 - Line Length + Mean Amplitude")
     print("#2 - Band Power")
+
+
     for feature in training_features:
-        print("Beginning training/testing for feature #"+str(feature))
-        for label in ["non-seizures", "seizures"]:
-            for patient in training_patients:
-                path_patient = f"chbmit-eeg-processed/{label}/" + patient
+        for patient in training_patients:
+
+            
+
+            for label_exc in ["non-seizures", "seizures"]:
+                path_patient = f"chbmit-eeg-processed/{label_exc}/" + patient
                 files_patient = os.listdir(path_patient)
-                for file in files_patient:
-                    name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file))
-                    for i in value_chs:
-                        # line length and mean amplitude
-                        if feature == 1:
-                            ll_ma = np.array([hdc.compute_lineLength(i),hdc.compute_meanAmp(i)])
-                            feature_array = np.append(feature_array, ll_ma)
-                        if feature == 2:
-                            sp = np.array(hdc.compute_bandPower(i, fs, window_size))
-                            feature_array = np.append(feature_array, sp)
-                        if label == "non-seizures":
-                            label_array = np.append(label_array, [0])
-                        else:
-                            label_array = np.append(label_array, [1])
-                print("Completed "+patient)
-        if feature == 1:
-            feature_array = feature_array.reshape(-1,2)
-        if feature == 2:
-            feature_array = feature_array.reshape(-1,6)
-        clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
-        clf.fit(feature_array, label_array)
 
-        print("Finished Training")
+                for file_exc in files_patient:
+                    feature_array = np.array([])
+                    label_array = np.array([])
+                    feature_array_test = np.array([])
+                    label_array_test = np.array([])
 
-        # TESTING PHASE
+                    for label in ["non-seizures", "seizures"]:
+                        for file_inc in files_patient:
+                            if file_inc == file_exc:
+                                continue
+                            else:
+                                name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file_inc))
+                                for i in value_chs:
+                                # line length and mean amplitude
+                                    if feature == 1:
+                                        ll_ma = np.array([hdc.compute_lineLength(i),hdc.compute_meanAmp(i)])
+                                        feature_array = np.append(feature_array, ll_ma)
+                                    elif feature == 2:
+                                        sp = np.array(hdc.compute_bandPower(i, fs, window_size))
+                                        feature_array = np.append(feature_array, sp)
+                                    if label == "non-seizures":
+                                        label_array = np.append(label_array, [0])
+                                    else:
+                                        label_array = np.append(label_array, [1])
 
-        for label in ["non-seizures", "seizures"]:
-            for patient in testing_patients:
-                path_patient = f"chbmit-eeg-processed/{label}/" + patient
-                files_patient = os.listdir(path_patient)
-                for file in files_patient:
-                    name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file))
+                    print("Completed training leave one out for"+ file_exc)
+                    if feature == 1:
+                        feature_array = feature_array.reshape(-1,2)
+                    if feature == 2:
+                        feature_array = feature_array.reshape(-1,6)
+                    clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
+                    clf.fit(feature_array, label_array)
+
+                    name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file_exc))
                     for i in value_chs:
                         # line length and mean amplitude
                         if feature == 1:
@@ -120,19 +127,90 @@ if __name__ == "__main__":
                             label_array_test = np.append(label_array_test, [0])
                         else:
                             label_array_test = np.append(label_array_test, [1])
-                print("Completed "+patient)
-        if feature == 1:
-            feature_array_test = feature_array_test.reshape(-1,2)
-        if feature == 2:
-            feature_array_test = feature_array_test.reshape(-1,6)
+                    print("Completed testing " + file_exc)
 
-        print("For feature #"+str(feature))
-        accuracy = clf.score(feature_array_test, label_array_test)
-        print(accuracy)
+                    if feature == 1:
+                        feature_array_test = feature_array_test.reshape(-1,2)
+                    if feature == 2:
+                        feature_array_test = feature_array_test.reshape(-1,6)
 
-        with open("svm_train_log.txt", 'a') as log:
-            log.write(dedent(
-                f"""
-                Feature #{feature} Accuracy: {accuracy}
-                """
-            ))
+                    print("For feature #"+str(feature))
+                    accuracy = clf.score(feature_array_test, label_array_test)
+                    print(accuracy)
+                            
+
+
+    # for feature in training_features:
+    #     print("Beginning training/testing for feature #"+str(feature))
+    #     feature_array = np.array([])
+    #     label_array = np.array([])
+    #     feature_array_test = np.array([])
+    #     label_array_test = np.array([])
+
+    #     for label in ["non-seizures", "seizures"]:
+    #         for patient in training_patients:
+    #             path_patient = f"chbmit-eeg-processed/{label}/" + patient
+    #             files_patient = os.listdir(path_patient)
+    #             for file in files_patient:
+    #                 name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file))
+    #                 for i in value_chs:
+    #                     # line length and mean amplitude
+    #                     if feature == 1:
+    #                         ll_ma = np.array([hdc.compute_lineLength(i),hdc.compute_meanAmp(i)])
+    #                         feature_array = np.append(feature_array, ll_ma)
+    #                     elif feature == 2:
+    #                         sp = np.array(hdc.compute_bandPower(i, fs, window_size))
+    #                         feature_array = np.append(feature_array, sp)
+    #                     if label == "non-seizures":
+    #                         label_array = np.append(label_array, [0])
+    #                     else:
+    #                         label_array = np.append(label_array, [1])
+    #             print("Completed training"+patient)
+    #     if feature == 1:
+    #         feature_array = feature_array.reshape(-1,2)
+    #     if feature == 2:
+    #         feature_array = feature_array.reshape(-1,6)
+    #     clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
+    #     clf.fit(feature_array, label_array)
+
+    #     path_patient = f"chbmit-eeg-processed/{label_exc}/" + patient
+    #     name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file))
+
+    #     print("Finished Training")
+
+    #     # TESTING PHASE
+
+    #     for label in ["non-seizures", "seizures"]:
+    #         for patient in testing_patients:
+    #             path_patient = f"chbmit-eeg-processed/{label}/" + patient
+    #             files_patient = os.listdir(path_patient)
+    #             for file in files_patient:
+    #                 name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file))
+    #                 for i in value_chs:
+    #                     # line length and mean amplitude
+    #                     if feature == 1:
+    #                         ll_ma = np.array([hdc.compute_lineLength(i),hdc.compute_meanAmp(i)])
+    #                         feature_array_test = np.append(feature_array_test, ll_ma)
+    #                     if feature == 2:
+    #                         sp = np.array(hdc.compute_bandPower(i, fs, window_size))
+    #                         feature_array_test = np.append(feature_array_test, sp)
+    #                     if label == "non-seizures":
+    #                         label_array_test = np.append(label_array_test, [0])
+    #                     else:
+    #                         label_array_test = np.append(label_array_test, [1])
+    #             print("Completed testing"+patient)
+    #     if feature == 1:
+    #         feature_array_test = feature_array_test.reshape(-1,2)
+    #     if feature == 2:
+    #         feature_array_test = feature_array_test.reshape(-1,6)
+
+    #     print("For feature #"+str(feature))
+    #     accuracy = clf.score(feature_array_test, label_array_test)
+    #     print(accuracy)
+
+    #     with open("svm_train_log.txt", 'a') as log:
+    #         log.write(dedent(
+    #             f"""
+    #             Feature #{feature} Accuracy: {accuracy}
+    #             """
+    #         ))

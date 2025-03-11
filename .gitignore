@@ -1,5 +1,6 @@
 # General
 */.vscode/*
+launch.json
 
 # Dataset
 chbmit-eeg/
