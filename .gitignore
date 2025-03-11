@@ -1,12 +1,26 @@
+# General
+*/.vscode/*
+
+# Dataset
 chbmit-eeg/
 chbmit-eeg-processed/
 chbmit-eeg-processed-v*/
 chbmit-eeg-processed.*
+
 training-data/
 training-data-v1/
-test.py
+
+# Python Software Model
+__pycache__/
+
 *.txt
 *.png
-main_new.py
 *.csv
 *.zip
+
+test.py
+
+# Hardware Model
+verilog/Tutorial Files/
+verilog/synopsys_dc.setup
+test.v

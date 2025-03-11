@@ -117,7 +117,7 @@ if __name__ == "__main__":
     #         print("\n")
 
     ######################################
-    for file in sorted(os.listdir("chbmit-eeg-processed/non-seizures/chb01")):
+    for file in sorted(os.listdir("chbmit-eeg-processed/non-seizures/chb02")):
         plotFeatureValues(file , 1)
     print("---Plot graph finish---")
     plt.show()
