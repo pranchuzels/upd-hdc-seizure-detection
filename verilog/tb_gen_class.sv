@@ -1,87 +1,91 @@
 `timescale 1ns / 1ps
-module cont_mem (
-    clk,
-    nrst,
-    hv,
-    en,
-    label,
-    ns_hv,
-    s_hv
-);
-    // General params
-    parameter DIMENSIONS = 10000;
+module tb_gen_class ();
+    localparam T = 10;  // clock period in ns
 
-    // Bundler params
-    localparam NUM_HVS = 2;
+
+    // General params
+    parameter DIMENSIONS = 5;
     // Bunder LFSR params
     parameter NUM_REGS = 16;
     parameter SEED = 16'b1001010010110101;
     parameter NUM_VALS = 5;
     parameter START_VAL = 5'b10101;
-
     // Continuous memory params
     parameter OVERRIDE = 0;
     parameter OR_NS = 10000'b0;
     parameter OR_S = 10000'hffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    input clk;
-    input nrst;
-    input [DIMENSIONS - 1:0] hv;
-    input en;
-    input label;
-    output reg [DIMENSIONS - 1:0] ns_hv = 0;
-    output reg [DIMENSIONS - 1:0] s_hv = 0;
+    reg clk;
+    reg nrst;
+    reg op;
+    reg trained_label;
+    reg [DIMENSIONS - 1:0] in_hv;
+    wire [DIMENSIONS - 1:0] ns_hv;
+    wire [DIMENSIONS - 1:0] s_hv;
+    wire predicted_label;
 
-    reg [DIMENSIONS - 1:0] hv_array [NUM_HVS - 1:0];
-    wire [DIMENSIONS - 1:0] hv_out;
-
-    bundler_ch #(
+    gen_class #(
         .DIMENSIONS(DIMENSIONS),
-        .NUM_HVS(NUM_HVS),
         .NUM_REGS(NUM_REGS),
         .SEED(SEED),
         .NUM_VALS(NUM_VALS),
-        .START_VAL(START_VAL)
+        .START_VAL(START_VAL),
+        .OVERRIDE(OVERRIDE),
+        .OR_NS(OR_NS),
+        .OR_S(OR_S)
     ) 
-    mem_bundler_ch(
+    u_gen_class(
         .clk  (clk),
         .nrst  (nrst),
-        .hv_array  (hv_array),
-        .hvout  (hv_out)
+        .op  (op),
+        .trained_label (trained_label),
+        .in_hv (in_hv),
+        .ns_hv (ns_hv),
+        .s_hv (s_hv),
+        .predicted_label (predicted_label)
     );
 
-    always @(posedge clk) begin
-        if (!nrst) begin
-            ns_hv <= 0;
-            s_hv <= 0;
-        end else begin
-            if (OVERRIDE == 1'b1) begin
-                ns_hv = OR_NS;
-                s_hv = OR_S;
-            end
-            else if (en == 1'b1) begin
-                if (label == 1'b0) begin
-                    hv_array[0] = ns_hv;
-                    hv_array[1] = hv;
-                end
-                else begin
-                    hv_array[0] = s_hv;
-                    hv_array[1] = hv;
-                end
-            end
-        end
+    // Clock
+    always begin
+        clk = 1'b1;
+        #(T / 2);
+        clk = 1'b0;
+        #(T / 2);
     end
 
-    always @(hv_out) begin
-        if (en == 1'b1) begin
-            if (label == 1'b0)
-                ns_hv <= hv_out;
-            else
-                s_hv <= hv_out;
-        end
-        else begin
-            ns_hv <= ns_hv;
-            s_hv <= s_hv;
-        end
+    initial begin
+        $vcdplusfile("tb_cont_mem.vpd");
+        $vcdpluson;
+        nrst = 0;
+        in_hv = 5'b0;
+        op = 0;
+        trained_label = 0;
+        #25
+        nrst = 1;
+        in_hv = 5'b11111;
+        trained_label = 1;
+        #10
+        in_hv = 5'b10001;
+        trained_label = 0;
+        #10
+        in_hv = 5'b11111;
+        trained_label = 1;
+        #10
+        op = 1;
+        in_hv = 5'b11111;
+        #10
+        op = 1;
+        in_hv = 5'b11101;
+        #10
+        op = 1;
+        in_hv = 5'b00111;
+        #10
+        op = 1;
+        in_hv = 5'b00000;
+        #10
+        op = 1;
+        in_hv = 5'b00001;
+        #30
+        $finish;
     end
 endmodule
