@@ -1,6 +1,12 @@
 # General
 */.vscode/*
 launch.json
+settings.json
+*.txt
+*.png
+*.csv
+*.zip
+
 
 # Dataset
 chbmit-eeg/
@@ -14,14 +20,10 @@ training-data-v1/
 # Python Software Model
 __pycache__/
 
-*.txt
-*.png
-*.csv
-*.zip
-
 test.py
 
 # Hardware Model
 verilog/Tutorial Files/
+verilog/screenshots/
 verilog/synopsys_dc.setup
 test.v
