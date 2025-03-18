@@ -19,6 +19,8 @@ training-data-v1/
 
 # Python Software Model
 __pycache__/
+memory_*.npy
+*_sv.text
 
 test.py
 
@@ -26,4 +28,5 @@ test.py
 verilog/Tutorial Files/
 verilog/screenshots/
 verilog/synopsys_dc.setup
-test.v
+test.sv
+tb_test.sv

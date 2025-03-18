@@ -14,15 +14,16 @@ module similarity (
     input [DIMENSIONS - 1:0] s_hv;
     output reg label_out;
 
-    int hv_xor_ns;
-    int hv_xor_s;
+    integer hv_xor_ns;
+    integer hv_xor_s;
+    integer i;
     
     always @(*) begin
 
         hv_xor_ns = 0;
         hv_xor_s = 0;
 
-        for (int i = 0; i < DIMENSIONS; i = i + 1) begin
+        for (i = 0; i < DIMENSIONS; i = i + 1) begin
             if (hv[i] ^ ns_hv[i] == 1'b1)
                 hv_xor_ns = hv_xor_ns + 1;
             if (hv[i] ^ s_hv[i] == 1'b1)

@@ -32,7 +32,7 @@ module gen_class (
     output reg [DIMENSIONS - 1:0] s_hv;
     output reg predicted_label;
 
-    reg en;
+    wire en;
     reg label_out;
 
     assign en = ~op; 
