@@ -48,9 +48,9 @@ if __name__ == "__main__":
     d = 6 # LBP bit size
     num_chs = 17 # constant
     levels = 64
-    training_patients = ["chb"+str(x).zfill(2) for x in range(1, 1+1)]
-    testing_patients = ["chb"+str(x).zfill(2) for x in range(20, 1+1)]
-    training_features = [2]
+    training_patients = ["chb"+str(x).zfill(2) for x in range(10, 10+1)]
+    testing_patients = ["chb"+str(x).zfill(2) for x in range(10, 10+1)]
+    training_features = [1,2,3]
     feature_array = np.array([])
     label_array = np.array([])
     feature_array_test = np.array([])
@@ -66,6 +66,9 @@ if __name__ == "__main__":
                 ---
                 Test Begin
                 ---
+                #1 - Line Length + Mean Amplitude
+                #2 - Band Power
+                #3 - LBP
                 """
             ))
     print("#1 - Line Length + Mean Amplitude")
@@ -74,9 +77,6 @@ if __name__ == "__main__":
 
     for feature in training_features:
         for patient in training_patients:
-
-            
-
             for label_exc in ["non-seizures", "seizures"]:
                 path_patient = f"chbmit-eeg-processed/{label_exc}/" + patient
                 files_patient = os.listdir(path_patient)
@@ -101,6 +101,9 @@ if __name__ == "__main__":
                                     elif feature == 2:
                                         sp = np.array(hdc.compute_bandPower(i, fs, window_size))
                                         feature_array = np.append(feature_array, sp)
+                                    elif feature == 3:
+                                        lbp = np.histogram(hdc.compute_optimizedLBP(i,6),bins=np.array(range(0,65)))[0]
+                                        feature_array = np.append(feature_array, lbp)
                                     if label == "non-seizures":
                                         label_array = np.append(label_array, [0])
                                     else:
@@ -111,6 +114,8 @@ if __name__ == "__main__":
                         feature_array = feature_array.reshape(-1,2)
                     if feature == 2:
                         feature_array = feature_array.reshape(-1,6)
+                    if feature == 3:
+                        feature_array = feature_array.reshape(-1,64)
                     clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
                     clf.fit(feature_array, label_array)
 
@@ -123,6 +128,9 @@ if __name__ == "__main__":
                         if feature == 2:
                             sp = np.array(hdc.compute_bandPower(i, fs, window_size))
                             feature_array_test = np.append(feature_array_test, sp)
+                        elif feature == 3:
+                            lbp = np.histogram(hdc.compute_optimizedLBP(i,6),bins=np.array(range(0,65)))[0]
+                            feature_array_test = np.append(feature_array_test, lbp)
                         if label == "non-seizures":
                             label_array_test = np.append(label_array_test, [0])
                         else:
@@ -133,10 +141,19 @@ if __name__ == "__main__":
                         feature_array_test = feature_array_test.reshape(-1,2)
                     if feature == 2:
                         feature_array_test = feature_array_test.reshape(-1,6)
+                    if feature == 3:
+                        feature_array_test = feature_array_test.reshape(-1,64)
 
-                    print("For feature #"+str(feature))
+                    print("For feature #"+str(feature)+" and for file " + file_exc + ", for " + label)
                     accuracy = clf.score(feature_array_test, label_array_test)
                     print(accuracy)
+                    with open("svm_train_log.txt", 'a') as log:
+                        log.write(dedent(
+                            f"""
+                            Feature #{feature} with {label} file {file_exc} - {accuracy}
+                            """
+                    ))
+                
                             
 
 
