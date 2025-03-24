@@ -3,6 +3,7 @@
 launch.json
 settings.json
 *.txt
+*.text
 *.png
 *.csv
 *.zip
@@ -30,3 +31,4 @@ verilog/screenshots/
 verilog/synopsys_dc.setup
 test.sv
 tb_test.sv
+*.tcl

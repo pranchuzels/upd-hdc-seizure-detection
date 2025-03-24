@@ -20,7 +20,7 @@ module lbp_encoder (
     input nrst;
 
     // Samples currently set as real numbers; change to accept fixed-representation!
-    input real samples [NUM_CHS - 1: 0]; // 256 + 6 = 262
+    input [16 - 1: 0] samples [NUM_CHS - 1: 0]; // 256 + 6 = 262
 
     output reg [DIMENSIONS - 1:0] window_hv;
 
@@ -34,7 +34,7 @@ module lbp_encoder (
     reg isFirstSample = 1;
     reg isFirstWindow = 1;
     reg [$clog2(WINDOW_SIZE + LBP_SIZE): 0] sampleCounter = 0;
-    real sample_memory [NUM_CHS - 1: 0][LBP_SIZE: 0];
+    reg [16 - 1: 0] sample_memory [NUM_CHS - 1: 0][LBP_SIZE: 0];
     reg [LBP_SIZE - 1: 0] sample_pattern [NUM_CHS - 1: 0];
     reg [DIMENSIONS - 1: 0] sample_lbp_hv [NUM_CHS - 1: 0];
     reg [DIMENSIONS - 1: 0] lbp_ch_bind [NUM_CHS - 1: 0];
@@ -109,7 +109,7 @@ module lbp_encoder (
                     sample_memory[i][LBP_SIZE] = samples[i]; // Get sample inputs
                 end
 
-                if (sampleCounter == LBP_SIZE) begin
+                if (sampleCounter == LBP_SIZE - 1) begin
                     isFirstSample <= 0;
                     sampleCounter <= 0;
                 end else begin
@@ -135,13 +135,13 @@ module lbp_encoder (
                     sample_memory[i][LBP_SIZE] = samples[i]; // Get sample inputs
 
                     // Get LBP pattern of channel's current samples
-                    for (int j = LBP_SIZE; j > 0; j = j - 1) begin
-                        if (sample_memory[i][j] < sample_memory[i][j - 1]) begin
-                            sample_pattern[i][j - 1] = 1'b1;
-                        end else if (sample_memory[i][j] > sample_memory[i][j - 1]) begin
-                            sample_pattern[i][j - 1] = 1'b0;
+                    for (int j = 0; j < LBP_SIZE; j = j + 1) begin
+                        if (((sample_memory[i][j] + (~sample_memory[i][j + 1]) + 1) & 16'h8000) == 16'h8000) begin
+                            sample_pattern[i][LBP_SIZE - j - 1] = 1'b1;
+                        end else if (((sample_memory[i][j] + (~sample_memory[i][j + 1]) + 1) & 16'h8000)  == 16'h0000) begin
+                            sample_pattern[i][LBP_SIZE - j - 1] = 1'b0;
                         end else begin
-                            sample_pattern[i][j - 1] = 1'b1; // change later
+                            sample_pattern[i][LBP_SIZE - j - 1] = 1'b1; // change later
                         end
                     end
                     sample_lbp_hv[i] = lbp_hv[sample_pattern[i]]; // Get LBP hv
@@ -184,7 +184,7 @@ always @(*) begin
     if (window_out) begin
         window_hv = window_bundler_out;
     end else begin
-        // window_hv = 0;
+        //window_hv = window_hv;
     end
 end
 
