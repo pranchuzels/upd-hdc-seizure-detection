@@ -30,10 +30,13 @@ with open("chbmit-eeg-processed/non-seizures/chb01/chb01_03.npy", 'rb') as f:
     last_samp = np.load(f)
     samp_freq = np.load(f)
     written_string = ""
-    for i in range(len(value_chs)):
-        for j in range(1+6):
-            written_string += str(value_chs[i][j]) + "\n"
-        written_string += "\n\n"
+
+    num_values = 6  + 4 + (2*2) # LBP size + window size + window step * number of windows
+    num_channels = 4
+    for i in range(num_values):
+        for j in range(num_channels):
+            written_string += f"samples[{j}] = " + str(value_chs[j][i] * (10**6)) + ";\n"
+        written_string += "#3.90625\n"
 
 with open("tb_encoder_sv.text", "w") as f:
     f.write(written_string) 
