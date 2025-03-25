@@ -43,10 +43,11 @@ module lbp_encoder (
     reg [DIMENSIONS - 1: 0] window_bundler_out;
     reg window_out = 0;
 
+    integer i;
+    integer j;
+
     // Item memory
-    item_mem #(
-    ) 
-    enc_item_mem(
+    item_mem enc_item_mem(
         .ch_hv (ch_hv),
         .lbp_hv  (lbp_hv)
     );
@@ -88,7 +89,8 @@ module lbp_encoder (
 
     always @(posedge clk) begin
         if (!nrst) begin
-            for (int i = 0; i < WINDOW_SIZE; i = i + 1) begin
+            
+            for (i = 0; i < WINDOW_SIZE; i = i + 1) begin
                 samples_hv[i] = 0;
             end
             isFirstSample <= 1;
@@ -99,13 +101,12 @@ module lbp_encoder (
             if (isFirstSample) begin
 
                 // Shift sample value memory
-                for (int i = 0; i < NUM_CHS; i = i + 1) begin
-                    for (int j = 0; j < LBP_SIZE; j = j + 1) begin
+                for (i = 0; i < NUM_CHS; i = i + 1) begin
+                    for (j = 0; j < LBP_SIZE; j = j + 1) begin
                         sample_memory[i][j] = sample_memory[i][j + 1];
                     end
                 end
-
-                for (int i = 0; i < NUM_CHS; i = i + 1) begin
+                for (i = 0; i < NUM_CHS; i = i + 1) begin
                     sample_memory[i][LBP_SIZE] = samples[i]; // Get sample inputs
                 end
 
@@ -119,23 +120,23 @@ module lbp_encoder (
             end else begin
                 
                 // Shift sample value memory
-                for (int i = 0; i < NUM_CHS; i = i + 1) begin
-                    for (int j = 0; j < LBP_SIZE; j = j + 1) begin
+                for (i = 0; i < NUM_CHS; i = i + 1) begin
+                    for (j = 0; j < LBP_SIZE; j = j + 1) begin
                         sample_memory[i][j] = sample_memory[i][j + 1];
                     end
                 end
 
                 // Shift sample HV memory
-                for (int i = 0; i < WINDOW_SIZE - 1; i = i + 1) begin
+                for (i = 0; i < WINDOW_SIZE - 1; i = i + 1) begin
                     samples_hv[i] = samples_hv[i + 1];
                 end
 
                 ///////////// GENERAL PROCESS ////////////////////
-                for (int i = 0; i < NUM_CHS; i = i + 1) begin
+                for (i = 0; i < NUM_CHS; i = i + 1) begin
                     sample_memory[i][LBP_SIZE] = samples[i]; // Get sample inputs
 
                     // Get LBP pattern of channel's current samples
-                    for (int j = 0; j < LBP_SIZE; j = j + 1) begin
+                    for (j = 0; j < LBP_SIZE; j = j + 1) begin
                         if (((sample_memory[i][j] + (~sample_memory[i][j + 1]) + 1) & 16'h8000) == 16'h8000) begin
                             sample_pattern[i][LBP_SIZE - j - 1] = 1'b1;
                         end else if (((sample_memory[i][j] + (~sample_memory[i][j + 1]) + 1) & 16'h8000)  == 16'h0000) begin
