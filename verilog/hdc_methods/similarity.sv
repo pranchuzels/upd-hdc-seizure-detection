@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ms / 1us
 
 module similarity (
     hv,

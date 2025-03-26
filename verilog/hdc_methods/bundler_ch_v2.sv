@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ms / 1us
 module bundler_ch_v2 (
     hv_array,
     hvout
@@ -58,7 +58,7 @@ module binarizer_odd (
     input [$clog2(NUM_HVS):0] ones [DIMENSIONS - 1:0];;
     output reg [DIMENSIONS - 1:0] hvout;
 
-    always @(ones) begin
+    always @(*) begin
         for(int i = 0; i < DIMENSIONS; i = i + 1) begin
             if (ones[i] > (NUM_HVS - 1) / 2)
                 hvout[i] = 1;

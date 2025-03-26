@@ -3,7 +3,8 @@ module lbp_encoder (
     clk,
     nrst,
     samples,
-    window_hv
+    window_hv,
+    out_en
 );
 
     // General params
@@ -23,6 +24,7 @@ module lbp_encoder (
     input [16 - 1: 0] samples [NUM_CHS - 1: 0]; // 256 + 6 = 262
 
     output reg [DIMENSIONS - 1:0] window_hv;
+    output wire out_en;
 
     // Feature Item HVs
     wire [DIMENSIONS - 1:0] ch_hv [17 - 1: 0];
@@ -42,6 +44,7 @@ module lbp_encoder (
     reg [DIMENSIONS - 1: 0] samples_hv [WINDOW_SIZE - 1: 0];
     reg [DIMENSIONS - 1: 0] window_bundler_out;
     reg window_out = 0;
+    assign out_en = window_out;
 
     integer i;
     integer j;

@@ -16,6 +16,7 @@ module tb_encoder ();
     reg nrst;
     reg [16 - 1: 0] samples [NUM_CHS - 1: 0];
     wire [DIMENSIONS - 1:0] window_hv;
+    wire out_en;
 
     lbp_encoder #(
         .DIMENSIONS(DIMENSIONS),
@@ -29,7 +30,8 @@ module tb_encoder ();
         .clk (clk),
         .nrst (nrst),
         .samples (samples),
-        .window_hv (window_hv)
+        .window_hv (window_hv),
+        .out_en (out_en)
     );
 
     // Clock

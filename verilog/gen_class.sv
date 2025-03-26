@@ -1,57 +1,52 @@
-`timescale 1ns / 1ps
+`timescale 1ms / 1us
 module gen_class (
     clk,
     nrst,
+    en,
+    in_hv,
     op,
     trained_label,
-    in_hv,
+    
     ns_hv,
     s_hv,
     predicted_label
 );
     // General parameters
     parameter DIMENSIONS = 10000;
-     // Bundler params
+     // Continuous Memory Bundler params
     localparam NUM_HVS = 2;
-    // Bunder LFSR params
-    parameter NUM_REGS = 16;
-    parameter SEED = 16'b1001010010110101;
-    parameter NUM_VALS = 5;
-    parameter START_VAL = 5'b10101;
+
     // Continuous memory params
-    parameter OVERRIDE = 0;
-    parameter OR_NS = 10000'b0;
-    parameter OR_S = 10000'hffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    parameter START_NS_HV = 10000'b0;
+    parameter START_S_HV = 10000'hffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     input clk;
     input nrst;
+    input [DIMENSIONS - 1:0] in_hv;
+    input en;
     input op;
     input trained_label;
-    input [DIMENSIONS - 1:0] in_hv;
+    
     output reg [DIMENSIONS - 1:0] ns_hv;
     output reg [DIMENSIONS - 1:0] s_hv;
     output reg predicted_label;
 
-    wire en;
-    reg label_out;
+    reg [DIMENSIONS - 1:0] in_train;
+    reg [DIMENSIONS - 1:0] in_test;
 
-    assign en = ~op; 
+    wire en_train;
+    assign en_train = ~op; 
 
     cont_mem #(
         .DIMENSIONS(DIMENSIONS),
-        .NUM_REGS(NUM_REGS),
-        .SEED(SEED),
-        .NUM_VALS(NUM_VALS),
-        .START_VAL(START_VAL),
-        .OVERRIDE(OVERRIDE),
-        .OR_NS(OR_NS),
-        .OR_S(OR_S)
+        .START_NS_HV(START_NS_HV),
+        .START_S_HV(START_S_HV)
     ) 
     sub_cont_mem(
         .clk  (clk),
         .nrst  (nrst),
-        .hv  (in_hv),
-        .en (en),
+        .hv  (in_train),
+        .en (en_train),
         .label (trained_label),
         .ns_hv (ns_hv),
         .s_hv (s_hv)
@@ -61,22 +56,26 @@ module gen_class (
         .DIMENSIONS(DIMENSIONS)
     ) 
     u_similarity(
-        .hv(in_hv),
+        .hv(in_test),
         .ns_hv(ns_hv),
         .s_hv(s_hv),
-        .label_out(label_out)
+        .label_out(predicted_label)
     );
 
     always @(posedge clk) begin
         if (!nrst) begin
-            predicted_label <= 0;
+            in_train = 0;
+            in_test = 0;
         end else begin
-            if (op == 1'b0) begin
-                //
+            if (en) begin
+                if (op == 1'b0) begin
+                    in_train = in_hv;
+                end
+                else begin
+                    in_test = in_hv;
+                end
             end
-            else begin
-                predicted_label <= label_out;
-            end
+            
         end
     end
 endmodule

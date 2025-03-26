@@ -24,7 +24,9 @@ import numpy as np
 #         written_string += ";\n"
 #     f.write(written_string)
 
-# Q13.3 fixed rep!! from uV values
+import tqdm
+
+# Q12.3 signed fixed rep!! from uV values
 num_int = 13 # including sign
 num_frac = 3
 with open("chbmit-eeg-processed/non-seizures/chb01/chb01_03.npy", 'rb') as f:
@@ -34,9 +36,10 @@ with open("chbmit-eeg-processed/non-seizures/chb01/chb01_03.npy", 'rb') as f:
     samp_freq = np.load(f)
     written_string = ""
 
-    num_values = 6  + 4 + (2*2) # LBP size + window size + window step * number of windows
-    num_channels = 4
-    for i in range(num_values):
+    # num_values = 6  + 4 + (2*2) # LBP size + window size + window step * number of windows
+    num_values = len(value_chs[0])
+    num_channels = len(value_chs)
+    for i in tqdm(range(num_values)):
         for j in range(num_channels):
             value = value_chs[j][i] * (10**6)
             
@@ -63,5 +66,5 @@ with open("chbmit-eeg-processed/non-seizures/chb01/chb01_03.npy", 'rb') as f:
             written_string += f"samples[{j}] = " + f"{num_int + num_frac}'b{bin_value}" + ";\n"
         written_string += "#3.90625\n"
 
-with open("tb_encoder_sv_v2.text", "w") as f:
+with open("tb_encoder_sv_v2.txt", "w") as f:
     f.write(written_string) 
