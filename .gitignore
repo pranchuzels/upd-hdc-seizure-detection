@@ -26,10 +26,11 @@ memory_*.npy
 test.py
 
 # Hardware Model
-verilog/Tutorial Files/
-verilog/screenshots/
-verilog/outdated
-verilog/synopsys_dc.setup
+verilog*/Tutorial Files/
+verilog*/screenshots/
+verilog*/outdated
+verilog*/synopsys_dc.setup
 test.sv
 tb_test.sv
 *.tcl
+*_wrapper.sv
