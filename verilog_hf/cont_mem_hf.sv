@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module cont_mem (
+module cont_mem_hf (
     clk,
     nrst,
     en,
@@ -20,27 +20,39 @@ module cont_mem (
 
     input clk;
     input nrst;
-    input [DIMENSIONS - 1:0] hv;
     input en;
+    input [DIMENSIONS - 1:0] hv;
     input label;
-    output reg [DIMENSIONS - 1:0] ns_hv = 0;
-    output reg [DIMENSIONS - 1:0] s_hv = 0;
 
+    output reg [DIMENSIONS - 1:0] ns_hv;
+    output reg [DIMENSIONS - 1:0] s_hv;
+
+    reg bundler_en;
     reg [DIMENSIONS - 1:0] hv_array [NUM_HVS - 1:0];
+    
+    wire out;
     wire [DIMENSIONS - 1:0] hv_out;
 
-    bundler_ch_v2 #(
+    reg state;
+
+    bundler_hf #(
         .DIMENSIONS(DIMENSIONS),
         .NUM_HVS(NUM_HVS)
     ) 
-    mem_bundler_ch(
+    mem_bundler_hf(
+        .clk (clk),
+        .nrst (nrst),
+        .en (bundler_en),
         .hv_array  (hv_array),
+        .out (out),
         .hvout  (hv_out)
     );
 
     always @(posedge clk) begin
         if (!nrst) begin
-            
+            out <= 1'b0;
+            ns_hv <= START_NS_HV;
+            s_hv <= START_S_HV;
         end else begin
             if (en == 1'b1) begin
                 if (label == 1'b0) begin
@@ -55,20 +67,30 @@ module cont_mem (
         end
     end
 
-    always @(hv_out or nrst) begin
+    always @(posedge clk or negedge nrst) begin
         if (!nrst) begin
-            ns_hv = START_NS_HV;
-            s_hv = START_S_HV;
+            ns_hv <= START_NS_HV;
+            s_hv <= START_S_HV;
+            state <= 1'b0;
+            bundler_en <= 1'b0;
+
         end else begin
-            if (en == 1'b1) begin
-                if (label == 1'b0)
-                    ns_hv = hv_out;
-                else
-                    s_hv = hv_out;
-            end
-            else begin
-                // ns_hv = ns_hv;
-                // s_hv = s_hv;
+            if (!state) begin
+                if (en) begin
+
+                    if (!label) begin
+                        hv_array[0] <= ns_hv;
+                        hv_array[1] <= hv;
+                    end else begin
+                        hv_array[0] <= s_hv;
+                        hv_array[1] <= hv;
+                    end
+
+                    state <= 1'b1;
+                    bundler_en <= 1'b1;
+                end
+            end else begin
+                
             end
         end
 
