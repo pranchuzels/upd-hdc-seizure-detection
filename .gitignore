@@ -26,6 +26,8 @@ memory_*.npy
 test.py
 
 # Hardware Model
+verilog_hf/
+verilog_old*/
 verilog*/Tutorial Files/
 verilog*/screenshots/
 verilog*/outdated
