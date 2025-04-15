@@ -24,47 +24,71 @@ import numpy as np
 #         written_string += ";\n"
 #     f.write(written_string)
 
-import tqdm
+with open("training-data/chb01/ns_set1_chb01_03.npy", 'rb') as f:
+    nonseizure_hv = np.load(f)
 
-# Q12.3 signed fixed rep!! from uV values
-num_int = 13 # including sign
-num_frac = 3
-with open("chbmit-eeg-processed/non-seizures/chb01/chb01_03.npy", 'rb') as f:
-    label_chs = np.load(f)
-    value_chs = np.load(f)
-    last_samp = np.load(f)
-    samp_freq = np.load(f)
-    written_string = ""
+with open("training-data/chb01/s_set1_chb01_03_0.npy", 'rb') as f:
+    seizure_hv = np.load(f)
 
-    # num_values = 6  + 4 + (2*2) # LBP size + window size + window step * number of windows
-    num_values = len(value_chs[0])
-    num_channels = len(value_chs)
-    for i in tqdm(range(num_values)):
-        for j in range(num_channels):
-            value = value_chs[j][i] * (10**6)
+with open("training-data/chb01/s_set1_chb01_04_0.npy", 'rb') as f:
+    test_hv = np.load(f)
+
+
+with open("similarity_sv.text", "w") as f:  
+    written_string = ""          
+    written_string += f"hv_nonseizure = "
+    written_string += "10000'h" + hex(int("".join(map(str, nonseizure_hv.tolist())), 2)).lstrip("0x")
+    written_string += ";\n"
+    written_string += f"hv_seizure = "
+    written_string += "10000'h" + hex(int("".join(map(str, seizure_hv.tolist())), 2)).lstrip("0x")
+    written_string += ";\n"
+    written_string += f"hv_test = "
+    written_string += "10000'h" + hex(int("".join(map(str, test_hv.tolist())), 2)).lstrip("0x")
+    written_string += ";\n"
+    f.write(written_string)
+
+
+# import tqdm
+
+# # Q12.3 signed fixed rep!! from uV values
+# num_int = 13 # including sign
+# num_frac = 3
+# with open("chbmit-eeg-processed/non-seizures/chb01/chb01_03.npy", 'rb') as f:
+#     label_chs = np.load(f)
+#     value_chs = np.load(f)
+#     last_samp = np.load(f)
+#     samp_freq = np.load(f)
+#     written_string = ""
+
+#     # num_values = 6  + 4 + (2*2) # LBP size + window size + window step * number of windows
+#     num_values = len(value_chs[0])
+#     num_channels = len(value_chs)
+#     for i in tqdm(range(num_values)):
+#         for j in range(num_channels):
+#             value = value_chs[j][i] * (10**6)
             
-            scaled_value = value * (2**num_frac)
-            bin_value = bin(abs(round(scaled_value)))
+#             scaled_value = value * (2**num_frac)
+#             bin_value = bin(abs(round(scaled_value)))
 
-            if value >= 0:
-                if len(bin_value) > num_int + num_frac + 2:
-                    raise ValueError("Value too large for Q13.3 fixed rep")
-                bin_value = bin_value.removeprefix("0b").rjust(num_int + num_frac, "0")
-            else:
-                if len(bin_value) > num_int + num_frac + 3:
-                    raise ValueError("Value too large for Q13.3 fixed rep")
-                bin_value = list(bin_value.removeprefix("0b").rjust(num_int + num_frac, "0"))
-                for k in range(len(bin_value)):
-                    if bin_value[k] == "0":
-                        bin_value[k] = "1"
-                    else:
-                        bin_value[k] = "0"
-                bin_value = "".join(bin_value)
-                bin_value = bin(int(bin_value, 2) + 1)
-                bin_value = bin_value.removeprefix("0b").rjust(num_int, "1")
+#             if value >= 0:
+#                 if len(bin_value) > num_int + num_frac + 2:
+#                     raise ValueError("Value too large for Q13.3 fixed rep")
+#                 bin_value = bin_value.removeprefix("0b").rjust(num_int + num_frac, "0")
+#             else:
+#                 if len(bin_value) > num_int + num_frac + 3:
+#                     raise ValueError("Value too large for Q13.3 fixed rep")
+#                 bin_value = list(bin_value.removeprefix("0b").rjust(num_int + num_frac, "0"))
+#                 for k in range(len(bin_value)):
+#                     if bin_value[k] == "0":
+#                         bin_value[k] = "1"
+#                     else:
+#                         bin_value[k] = "0"
+#                 bin_value = "".join(bin_value)
+#                 bin_value = bin(int(bin_value, 2) + 1)
+#                 bin_value = bin_value.removeprefix("0b").rjust(num_int, "1")
 
-            written_string += f"samples[{j}] = " + f"{num_int + num_frac}'b{bin_value}" + ";\n"
-        written_string += "#3.90625\n"
+#             written_string += f"samples[{j}] = " + f"{num_int + num_frac}'b{bin_value}" + ";\n"
+#         written_string += "#3.90625\n"
 
-with open("tb_encoder_sv_v2.txt", "w") as f:
-    f.write(written_string) 
+# with open("tb_encoder_sv_v2.txt", "w") as f:
+#     f.write(written_string) 
