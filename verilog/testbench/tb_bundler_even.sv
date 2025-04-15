@@ -12,7 +12,7 @@ module tb_bundler_even;
     reg clk;
     reg nrst;
     reg en;
-    reg [DIMENSIONS-1:0] hv_array [NUM_HVS - 1:0];
+    reg [NUM_HVS - 1:0][DIMENSIONS-1:0] hv_array;
     wire out;
     wire [DIMENSIONS - 1:0] hv_out;
 
