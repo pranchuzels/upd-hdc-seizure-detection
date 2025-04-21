@@ -25,16 +25,16 @@ module similarity (
     reg state;
     reg [$clog2(DIMENSIONS) - 1: 0] d;
 
-    logic [DIMENSIONS - 1:0] hv_sim_nonseizure;
-    logic [DIMENSIONS - 1:0] hv_sim_seizure;
+    logic bit_sim_nonseizure;
+    logic bit_sim_seizure;
     reg [$clog2(DIMENSIONS): 0] count_sim_nonseizure;
     reg [$clog2(DIMENSIONS): 0] count_sim_seizure;
 
 
 
     always_comb begin
-        hv_sim_nonseizure = hv_test ^ hv_nonseizure;
-        hv_sim_seizure = hv_test ^ hv_seizure;
+        bit_sim_nonseizure = hv_test[d] ^ hv_nonseizure[d];
+        bit_sim_seizure = hv_test[d] ^ hv_seizure[d];
     end
 
     always_ff @(posedge clk or negedge nrst) begin
@@ -72,9 +72,9 @@ module similarity (
                     done <= 1;
                 end
                 else begin
-                    if (hv_sim_nonseizure[d] == 1)
+                    if (bit_sim_nonseizure == 1)
                         count_sim_nonseizure <= count_sim_nonseizure + 1;
-                    if (hv_sim_seizure[d] == 1)
+                    if (bit_sim_seizure == 1)
                         count_sim_seizure <= count_sim_seizure + 1;
 
                     d <= d + 1;

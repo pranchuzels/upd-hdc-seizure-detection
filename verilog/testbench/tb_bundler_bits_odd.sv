@@ -11,8 +11,7 @@ module tb_bundler_bits_odd;
     reg nrst;
     reg en;
     reg [NUM_HVS - 1:0][PAR_BITS - 1: 0] bits;
-    reg [PAR_BITS - 1: 0] ties_1;
-    reg [PAR_BITS - 1: 0] ties_2;
+    reg [PAR_BITS - 1: 0] tie_bits;
     wire done;
     wire [PAR_BITS - 1: 0] out_bits;
 
@@ -26,8 +25,7 @@ module tb_bundler_bits_odd;
         .nrst (nrst),
         .en (en),
         .bits  (bits),
-        .ties_1 (ties_1),
-        .ties_2 (ties_2),
+        .tie_bits (tie_bits),
         .done (done),
         .out_bits (out_bits)
     );
@@ -50,8 +48,7 @@ module tb_bundler_bits_odd;
         bits[2] = 2'b0;
         bits[3] = 2'b0;
         bits[4] = 2'b0;
-        ties_1 = 2'b0;
-        ties_2 = 2'b0;
+        tie_bits = 2'b0;
         #95
         nrst = 1;
         en = 1;

@@ -11,8 +11,7 @@ module tb_bundler_bits_even;
     reg nrst;
     reg en;
     reg [NUM_HVS - 1:0][PAR_BITS - 1: 0] bits;
-    reg [PAR_BITS - 1: 0] ties_1;
-    reg [PAR_BITS - 1: 0] ties_2;
+    reg [PAR_BITS - 1: 0] tie_bits;
     wire done;
     wire [PAR_BITS - 1: 0] out_bits;
 
@@ -26,8 +25,7 @@ module tb_bundler_bits_even;
         .nrst (nrst),
         .en (en),
         .bits  (bits),
-        .ties_1 (ties_1),
-        .ties_2 (ties_2),
+        .tie_bits (tie_bits),
         .done (done),
         .out_bits (out_bits)
     );
@@ -51,8 +49,7 @@ module tb_bundler_bits_even;
         bits[3] = 2'b0;
         bits[4] = 2'b0;
         bits[5] = 2'b0;
-        ties_1 = 2'b0;
-        ties_2 = 2'b0;
+        tie_bits = 2'b0;
         #95
         nrst = 1;
         en = 1;
@@ -62,36 +59,29 @@ module tb_bundler_bits_even;
         bits[3] = 2'b00;
         bits[4] = 2'b00;
         bits[5] = 2'b11;
-        ties_1 = 2'b00;
-        ties_2 = 2'b00;
+        tie_bits = 2'b00;
         #10
         en = 0;
         #90
         en = 1;
-        bits[0] = 6'b100101;
-        bits[1] = 6'b101001;
         bits[0] = 2'b11;
         bits[1] = 2'b00;
         bits[2] = 2'b10;
         bits[3] = 2'b01;
         bits[4] = 2'b00;
         bits[5] = 2'b11;
-        ties_1 = 2'b00;
-        ties_2 = 2'b10;
+        tie_bits = 2'b10;
         #10
         en = 0;
         #90
         en = 1;
-        bits[0] = 6'b101100;
-        bits[1] = 6'b111111;
         bits[0] = 2'b11;
         bits[1] = 2'b10;
         bits[2] = 2'b11;
         bits[3] = 2'b11;
         bits[4] = 2'b10;
         bits[5] = 2'b10;
-        ties_1 = 2'b01;
-        ties_2 = 2'b01;
+        tie_bits = 2'b00;
         #10
         en = 0;
         #95

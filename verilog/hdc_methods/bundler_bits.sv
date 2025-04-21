@@ -5,8 +5,7 @@ module bundler_bits (
     nrst,
     en,
     bits,
-    ties_1,
-    ties_2,
+    tie_bits,
     done,
     out_bits
 );
@@ -22,8 +21,7 @@ module bundler_bits (
     input nrst;
     input en;
     input [NUM_HVS - 1:0][PAR_BITS - 1: 0] bits;
-    input [PAR_BITS - 1: 0] ties_1;
-    input [PAR_BITS - 1: 0] ties_2;
+    input [PAR_BITS - 1: 0] tie_bits;
     output reg done;
     output reg [PAR_BITS - 1: 0] out_bits;
 
@@ -67,7 +65,7 @@ module bundler_bits (
                         else if (num_ones[i_bit] < w_max_zeros)
                             out_bits_temp[i_bit] = 0;
                         else
-                            out_bits_temp[i_bit] = ties_1[i_bit] ^ ties_2[i_bit];
+                            out_bits_temp[i_bit] = tie_bits[i_bit];
                     end
                 end
                 else begin
