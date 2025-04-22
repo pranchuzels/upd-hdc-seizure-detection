@@ -58,6 +58,44 @@ def bundle(hv_arr: np.ndarray):
 
     return sum_hv
 
+def bundle_cont(hv_in: np.ndarray, label_counters):
+    """
+    Bundles an input hypervector for continuous memory by adding/subtracting bits to running counters for dimension bits.
+    Returns the new label_counters.
+
+    ### Parameters:
+        hv_in : hypervector
+            hypervector to be bundled in continuous memory
+        label_counters :
+            array of running counters for each dimension bit of hypervector
+    """
+
+    for i in range(len(label_counters)):
+        if hv_in[i] == 1:
+            label_counters[i] += 1
+        else:
+            label_counters[i] -= 1
+
+    return label_counters
+
+def binarize_cont(label_counters):
+    """
+    Binarizes the running counters of a hypervector according to sign bits and randomizes ties.
+
+    ### Parameters:
+        label_counters : array of running counters
+            array of running counters for each dimension bit of hypervector
+    """
+    with np.nditer(label_counters, op_flags=['readwrite']) as it:
+        for x in it:
+            if x > 0:
+                x[...] = 1
+            elif x == 0:
+                x[...] = random.randint(0,1)
+            else:
+                x[...] = 0
+
+    return label_counters
 
 def compute_similarity(hv1: np.ndarray, hv2: np.ndarray):
     """

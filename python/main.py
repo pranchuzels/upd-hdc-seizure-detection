@@ -302,7 +302,7 @@ def _process_windowHVs(window_chs: np.ndarray,
         return hdc.bundle(sum_winhv)
 
 
-def train_file(n, window_size, window_step, feature_set, d, data, memory, label_hv, filename, levels = None):
+def train_file(n, window_size, window_step, feature_set, d, data, memory, label_counters, filename, levels = None):
 
     # Parse data
     name_chs, value_chs, last_samp, samp_freq = data
@@ -364,10 +364,10 @@ def train_file(n, window_size, window_step, feature_set, d, data, memory, label_
                             allwindows_chs, chunksize=1):
             pbar.update()
             pbar.refresh()
-            label_hv = hdc.bundle([result, label_hv])
+            label_counters = hdc.bundle_cont(result, label_counters)
 
 
-    return label_hv
+    return label_counters
 
 
 def train_leave_one_out(n, window_size, window_step, fs, feature_set, d, memory, label, list_patients, levels = None):
@@ -412,7 +412,7 @@ def train_leave_one_out(n, window_size, window_step, fs, feature_set, d, memory,
         pbar_patient = tqdm(files_patient, leave=False, total=len(files_patient))
         for file_exc in pbar_patient:
 
-            label_hv = np.zeros(n, dtype=int)
+            label_counters = np.zeros(n, dtype=int)
             pbar_patient.set_description(f"Now excluding {file_exc}.")
 
             for file_inc in files_patient:
@@ -422,10 +422,11 @@ def train_leave_one_out(n, window_size, window_step, fs, feature_set, d, memory,
                     name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file_inc))
                     data = name_chs, value_chs, last_samp, fs
 
-                    label_hv = train_file(n, window_size, window_step, feature_set, d, data, memory, label_hv, file_inc, levels)
-                    pbar_all.write(f"Current label hv: {label_hv}")
+                    label_counters = train_file(n, window_size, window_step, feature_set, d, data, memory, label_counters, file_inc, levels)
+                    pbar_all.write(f"Current label_counters: {label_counters}")
 
-            
+            label_hv = hdc.binarize_cont(label_counters)
+
             if label == "seizures":
                 directory = f"training-data/{patient}/s_set{feature_set}_{file_exc[:-4]}.npy"
             elif label == "non-seizures":
@@ -683,61 +684,61 @@ if __name__ == "__main__":
     # Comment and/or edit parameters below for training
     # training_patients = ["chb"+str(x).zfill(2) for x in range(1, 24+1)]
     # training_features = [1, 2, 3, 4]
-    # training_patients = ["chb01"]
-    # training_features = [1]
+    training_patients = ["chb01"]
+    training_features = [1]
     
 
-    # for label in ["non-seizures", "seizures"]:
-    #     # LBP only
-    #     if 1 in training_features:
-    #         train_leave_one_out(n = n,
-    #                             window_size = window_size,
-    #                             window_step = window_step,
-    #                             fs=fs,
-    #                             feature_set = 1,
-    #                             d = d,
-    #                             memory= (get_memory(0), get_memory(1)), 
-    #                             label=label, 
-    #                             list_patients=training_patients)
+    for label in ["non-seizures", "seizures"]:
+        # LBP only
+        if 1 in training_features:
+            train_leave_one_out(n = n,
+                                window_size = window_size,
+                                window_step = window_step,
+                                fs=fs,
+                                feature_set = 1,
+                                d = d,
+                                memory= (get_memory(0), get_memory(1)), 
+                                label=label, 
+                                list_patients=training_patients)
         
-    #     # Spectral power only
-    #     if 2 in training_features:
-    #         train_leave_one_out(n = n,
-    #                             window_size = window_size,
-    #                             window_step = window_step,
-    #                             fs=fs,
-    #                             feature_set = 2,
-    #                             d = 0,
-    #                             memory= (get_memory(0), get_memory(2)), 
-    #                             levels=levels,
-    #                             label=label, 
-    #                             list_patients=training_patients)
+        # Spectral power only
+        if 2 in training_features:
+            train_leave_one_out(n = n,
+                                window_size = window_size,
+                                window_step = window_step,
+                                fs=fs,
+                                feature_set = 2,
+                                d = 0,
+                                memory= (get_memory(0), get_memory(2)), 
+                                levels=levels,
+                                label=label, 
+                                list_patients=training_patients)
 
-    #     # Line Length, mean amplitude, LBP
-    #     if 3 in training_features:
-    #         train_leave_one_out(n = n,
-    #                             window_size = window_size,
-    #                             window_step = window_step,
-    #                             fs=fs,
-    #                             feature_set = 3,
-    #                             d = 6,
-    #                             memory= (get_memory(0), get_memory(4), get_memory(3), get_memory(1), get_memory(5)), 
-    #                             levels=levels,
-    #                             label=label, 
-    #                             list_patients=training_patients)
+        # Line Length, mean amplitude, LBP
+        if 3 in training_features:
+            train_leave_one_out(n = n,
+                                window_size = window_size,
+                                window_step = window_step,
+                                fs=fs,
+                                feature_set = 3,
+                                d = 6,
+                                memory= (get_memory(0), get_memory(4), get_memory(3), get_memory(1), get_memory(5)), 
+                                levels=levels,
+                                label=label, 
+                                list_patients=training_patients)
             
-    #     # Line Length and spectral power
-    #     if 4 in training_features:
-    #         train_leave_one_out(n = n,
-    #                             window_size = window_size,
-    #                             window_step = window_step,
-    #                             fs=fs,
-    #                             feature_set = 4,
-    #                             d = 0,
-    #                             memory= (get_memory(0), get_memory(2), get_memory(4), get_memory(5)), 
-    #                             levels=levels,
-    #                             label=label, 
-    #                             list_patients=training_patients)
+        # Line Length and spectral power
+        if 4 in training_features:
+            train_leave_one_out(n = n,
+                                window_size = window_size,
+                                window_step = window_step,
+                                fs=fs,
+                                feature_set = 4,
+                                d = 0,
+                                memory= (get_memory(0), get_memory(2), get_memory(4), get_memory(5)), 
+                                levels=levels,
+                                label=label, 
+                                list_patients=training_patients)
 
     ###################################################################
     # TESTING
