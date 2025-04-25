@@ -28,6 +28,7 @@ test.py
 # Hardware Model
 verilog_hf/
 verilog_old*/
+verilog/test/
 verilog*/Tutorial Files/
 verilog*/screenshots/
 verilog*/outdated
