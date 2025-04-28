@@ -357,3 +357,16 @@ def compute_bandPower(window: np.ndarray, fs: int, ws: int):
     # plt.show()
 
     return result
+
+def post_processing_window(arr, tolerance: int):
+    for i in range(len(arr)):
+        if i - tolerance < 0 or i + tolerance >= len(arr):
+            continue
+        else:
+            arr1 = np.array(arr[i-tolerance:i])
+            arr2 = np.array(arr[i+1:i+tolerance+1])
+            # print(f"{arr1} - {arr[i]} - {arr2}")
+            if np.array_equal(arr1, arr2):
+                # print("changed")
+                arr[i] = arr[i-tolerance]
+    return arr
