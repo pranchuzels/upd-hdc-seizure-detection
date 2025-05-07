@@ -505,6 +505,7 @@ def test(test_filepath, n, window_size, window_step, fs, feature_set, d, memory,
 
     num_seiz = 0
     num_non_seiz = 0
+    predictions = np.array([])
     # Use multiprocessing library for processing window HVs in a window of channels
     with Pool(processes=8) as p, tqdm(total=len(allwindows_chs), desc=patient_file, leave=False) as pbar:
         for result in p.imap(partial(_process_windowHVs, 
@@ -524,9 +525,13 @@ def test(test_filepath, n, window_size, window_step, fs, feature_set, d, memory,
             sim_non_seizure = hdc.compute_similarity(result, non_seizure_hv)
 
             if sim_seizure <= sim_non_seizure:
+                predictions = np.append(predictions, [1])
                 num_seiz += 1
             else:
+                predictions = np.append(predictions, [-1])
                 num_non_seiz += 1
+    
+    
 
     print(f"No. of seizure windows: {num_seiz}, No. of non-seizure windows: {num_non_seiz}")
 
@@ -535,7 +540,8 @@ def test(test_filepath, n, window_size, window_step, fs, feature_set, d, memory,
         file_id = file_split[1]
     else:
         file_id = str(file_split[1]) + "_" + str(file_split[2])
-
+    filename = f"preds_hdc/nonpost/{patient}_feature{feature_set}_{file_id}.txt"
+    np.savetxt(filename, predictions)
     with open("testing_log.txt", 'a') as log:
         log.write(dedent(
             f"{file_id}, {num_seiz},  {num_non_seiz}\n"
@@ -663,7 +669,6 @@ if __name__ == "__main__":
 
     ###################################################################
     # ITEM MEMORY CREATION (comment out as needed)
-
     # create_memory(n=n, mem_type=0, items = num_chs) # channels
     # create_memory(n=n, mem_type=1, items = d) # LBP
     # create_memory(n=n, mem_type=2, items = levels) # spectral power
@@ -684,8 +689,8 @@ if __name__ == "__main__":
     # Comment and/or edit parameters below for training
     # training_patients = ["chb"+str(x).zfill(2) for x in range(1, 24+1)]
     # training_features = [1, 2, 3, 4]
-    training_patients = ["chb01"]
-    training_features = [1]
+    training_patients = ["chb02"]
+    training_features = [1, 2, 3, 4]
     
 
     for label in ["non-seizures", "seizures"]:
@@ -745,7 +750,7 @@ if __name__ == "__main__":
 
     # Comment and/or edit parameters below for testing
     testing_patients = ["chb"+str(x).zfill(2) for x in range(1, 1+1)]
-    testing_features = [1]
+    testing_features = [1,2,3,4]
 
     for set in testing_features:
 
@@ -784,7 +789,7 @@ if __name__ == "__main__":
                 log.write(dedent(
                     f"""\
                     ----------------------------------------------------------
-                    Patient, {patient}
+                    Patient, {patient}      
                     Time start, {time.ctime()}
                     """
                 ))
@@ -796,7 +801,7 @@ if __name__ == "__main__":
                     window_step=window_step,
                     fs=fs,
                     feature_set=set,
-                    d=d,
+                    d=d,    
                     memory=memory,
                     levels=levels,
                     seizure_filepath=str("training-data/" + patient + "/s_" + "set" + str(set) + "_" + patient_file),
