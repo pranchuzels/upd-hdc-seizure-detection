@@ -64,9 +64,9 @@ if __name__ == "__main__":
     d = 6 # LBP bit size
     num_chs = 17 # constant
     levels = 64
-    training_patients = ["chb"+str(x).zfill(2) for x in range(16, 24+1)]
+    training_patients = ["chb"+str(x).zfill(2) for x in range(1, 1+1)]
     testing_patients = ["chb"+str(x).zfill(2) for x in range(2, 1+1)]
-    training_features = [3,4]
+    training_features = [1,2,3,4]
     feature_array = np.array([])
     label_array = np.array([])
     feature_array_test = np.array([])
@@ -131,54 +131,64 @@ if __name__ == "__main__":
                     path_patient = f"chbmit-eeg-processed/{label}/" + patient
                     files_patient = os.listdir(path_patient)
                     files = len(files_patient)
+                    counter = 0
                     for file_inc in files_patient:
+                        counter += 1
                         if file_inc in file_exc:
                             continue
                         else:
                             name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file_inc))
-                            counter = 0
-                            for m in value_chs:
-                                counter += 1
+                            
+                            samples = len(value_chs[0])
+                            for j in range(0, samples, window_step):
                                 # line length and mean amplitude
                                 # i = scipy.signal.filtfilt(b_filt, a_filt, i)
                                 # i = scipy.signal.upfirdn(h_filt, i)
-                                print(f"Working... {counter} of {len(value_chs)} - {file_inc}")
-                                for j in range(0, int(len(m)), window_step):
+                                # print(f"Working... {counter} of {samples} - {file_inc}")
+                                feat_temp = np.array([])
+                                # print(f"{j} out of {samples}")
+                                for m in value_chs:
                                     if j + window_size >= len(m):
                                         break
                                     else:
                                         i = m[j:j+window_size]
                                     if feature == 1:
                                         lbp = np.histogram(hdc.compute_optimizedLBP(i,6),bins=np.array(range(0,65)))[0]
-                                        feature_array = np.append(feature_array, lbp)
+                                        feat_temp = np.append(feat_temp, lbp)
                                     elif feature == 2:
                                         sp = np.array(hdc.compute_bandPower(i, fs, window_size))
-                                        feature_array = np.append(feature_array, sp)
+                                        feat_temp = np.append(feat_temp, sp)
                                     elif feature == 3:
                                         lbp = np.histogram(hdc.compute_optimizedLBP(i,6),bins=np.array(range(0,65)))[0]
-                                        feature_array = np.append(feature_array, lbp)
+                                        feat_temp = np.append(feat_temp, lbp)
                                         ll_ma = np.array([hdc.compute_lineLength(i),hdc.compute_meanAmp(i)])
-                                        feature_array = np.append(feature_array, ll_ma)
+                                        feat_temp = np.append(feat_temp, ll_ma)
                                     elif feature == 4:
                                         sp = np.array(hdc.compute_bandPower(i, fs, window_size))
-                                        feature_array = np.append(feature_array, sp)
+                                        feat_temp = np.append(feat_temp, sp)
                                         ll = np.array([hdc.compute_lineLength(i)])
-                                        feature_array = np.append(feature_array, ll)
+                                        feat_temp = np.append(feat_temp, ll)
+                                if len(feat_temp) == 0:
+                                    continue
+                                else:
+                                    feature_array = np.append(feature_array, feat_temp)
                                     if label == "non-seizures":
                                         label_array = np.append(label_array, [-1])
                                         
                                     else:
                                         label_array = np.append(label_array, [1])
-                                    
+                                    # print(f"feat array - {len(feature_array)/(64*17)}, label_array - {len(label_array)}, loop - {counter}")
+                        print(f"file {counter} out of {len(files_patient)}")
+
                 
                 if feature == 1:
-                    feature_array = feature_array.reshape(-1,64)
+                    feature_array = feature_array.reshape(-1,64*17)
                 if feature == 2:
-                    feature_array = feature_array.reshape(-1,6)
+                    feature_array = feature_array.reshape(-1,6*17)
                 if feature == 3:
-                    feature_array = feature_array.reshape(-1,66)
+                    feature_array = feature_array.reshape(-1,66*17)
                 if feature == 4:
-                    feature_array = feature_array.reshape(-1,7)
+                    feature_array = feature_array.reshape(-1,7*17)
                 clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
                 clf.fit(feature_array, label_array)
                 print(f"Completed training leave one out for {file_exc} with length of {len(feature_array)}")
@@ -191,42 +201,50 @@ if __name__ == "__main__":
                         label_exc = "non-seizures"
                     file_exc_name = file_exc[file_exc_iter]
                     name_chs, value_chs, last_samp, samp_freq = extract_npy(str(path_patient + "/"+ file_exc_name))
-                    for m in value_chs:
+                    samples = len(value_chs[0])
+                    for j in range(0, samples, window_step):
                         # line length and mean amplitude
-                        for j in range(0, int(len(m)), window_step):
+                        feat_temp_test = np.array([])
+                        for m in value_chs:
                             if j + window_size >= len(m):
                                 break
                             else:
                                 i = m[j:j+window_size]
                             if feature == 1:
                                 lbp = np.histogram(hdc.compute_optimizedLBP(i,6),bins=np.array(range(0,65)))[0]
-                                feature_array_test = np.append(feature_array_test, lbp)
+                                feat_temp_test = np.append(feat_temp_test, lbp)
                             elif feature == 2:
                                 sp = np.array(hdc.compute_bandPower(i, fs, window_size))
-                                feature_array_test = np.append(feature_array_test, sp)
+                                feat_temp_test = np.append(feat_temp_test, sp)
                             elif feature == 3:
                                 lbp = np.histogram(hdc.compute_optimizedLBP(i,6),bins=np.array(range(0,65)))[0]
-                                feature_array_test = np.append(feature_array_test, lbp)
+                                feat_temp_test = np.append(feat_temp_test, lbp)
                                 ll_ma = np.array([hdc.compute_lineLength(i),hdc.compute_meanAmp(i)])
-                                feature_array_test = np.append(feature_array_test, ll_ma)
+                                feat_temp_test = np.append(feat_temp_test, ll_ma)
                             elif feature == 4:
                                 sp = np.array(hdc.compute_bandPower(i, fs, window_size))
-                                feature_array_test = np.append(feature_array_test, sp)
+                                feat_temp_test = np.append(feat_temp_test, sp)
                                 ll = np.array([hdc.compute_lineLength(i)])
-                                feature_array_test = np.append(feature_array_test, ll)
+                                feat_temp_test = np.append(feat_temp_test, ll)
+                        if len(feat_temp_test) == 0:
+                            continue
+                        else:
+                            feature_array_test = np.append(feature_array_test, feat_temp_test)
                             if label_exc == "non-seizures":
                                 label_array_test = np.append(label_array_test, [-1])
+                                
                             else:
                                 label_array_test = np.append(label_array_test, [1])
                 print(f"Completed testing {file_exc}")
+                print(len(feature_array_test))
                 if feature == 1:
-                    feature_array_test = feature_array_test.reshape(-1,64)
+                    feature_array_test = feature_array_test.reshape(-1,64*17)
                 if feature == 2:
-                    feature_array_test = feature_array_test.reshape(-1,6)
+                    feature_array_test = feature_array_test.reshape(-1,6*17)
                 if feature == 3:
-                    feature_array_test = feature_array_test.reshape(-1,66)
+                    feature_array_test = feature_array_test.reshape(-1,66*17)
                 if feature == 4:
-                    feature_array_test = feature_array_test.reshape(-1,7)
+                    feature_array_test = feature_array_test.reshape(-1,7*17)
                 
                 
 
