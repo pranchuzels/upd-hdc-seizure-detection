@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
  
 module tb_lfsr;
-  localparam T = 10;  // clock period in ns
+  localparam T = 1000;  // clock period in ns
 
   localparam NUM_REGS = 8;
   localparam SEED = 8'b10010110;
@@ -10,7 +10,7 @@ module tb_lfsr;
   reg clk;
   reg nrst;
   reg en;
-  wire out_tie;
+  wire [10000 - 1: 0] out_ties;
  
   lfsr #(
     .NUM_REGS(NUM_REGS),
@@ -21,7 +21,7 @@ module tb_lfsr;
       .clk  (clk),
       .nrst (nrst),
       .en   (en),
-      .out_tie  (out_tie)
+      .out_ties  (out_ties)
   );
   
   // Clock
@@ -41,7 +41,7 @@ module tb_lfsr;
     nrst = 1'b1;
     for (int i = 0; i < 5; i = i + 1) begin
       en = 1;
-      # 10
+      # 1000
       en = 0;
     end
     # 15

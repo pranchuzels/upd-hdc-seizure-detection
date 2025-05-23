@@ -16,7 +16,7 @@ chbmit-eeg-processed-v*/
 chbmit-eeg-processed.*
 
 training-data/
-training-data-v1/
+training-data-*/
 
 # Python Software Model
 __pycache__/
@@ -32,6 +32,7 @@ verilog/test/
 verilog*/Tutorial Files/
 verilog*/screenshots/
 verilog*/outdated
+verilog*/matlab
 verilog*/synopsys_dc.setup
 test.sv
 tb_test.sv
