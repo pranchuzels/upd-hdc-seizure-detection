@@ -38,6 +38,29 @@ def bind(hv1: np.ndarray, hv2: np.ndarray):
 def bundle(hv_arr: np.ndarray):
     """
     Bundles an array of hypervectors and returns the resulting hypervector.
+    Results are binarized according to half the length of the array. Ties are set to 0. 
+
+    ### Parameters:
+        hv_arr : numpy array of hypervectors
+            array of hypervectors to be bundled 
+    """
+    l = len(hv_arr)
+    sum_hv = np.sum(hv_arr, axis=0)
+
+    with np.nditer(sum_hv, op_flags=['readwrite']) as it:
+        for x in it:
+            if x > l/2:
+                x[...] = 1
+            # elif x == l/2:
+            #     x[...] = random.randint(0,1)
+            else:
+                x[...] = 0
+
+    return sum_hv
+
+def bundle_ties(hv_arr: np.ndarray):
+    """
+    Bundles an array of hypervectors and returns the resulting hypervector.
     Results are binarized according to half the length of the array and ties are randomly broken. 
 
     ### Parameters:
@@ -91,7 +114,8 @@ def binarize_cont(label_counters):
             if x > 0:
                 x[...] = 1
             elif x == 0:
-                x[...] = random.randint(0,1)
+                # x[...] = random.randint(0,1)
+                x[...] = 0
             else:
                 x[...] = 0
 
@@ -238,12 +262,14 @@ def compute_optimizedLBP(window, d):
     for i in range(1, len(window)):
         if window[i-1] > window[i]:
             cont_val_LBP += "0"
-        elif window[i-1] < window[i]:
+        # elif window[i-1] < window[i]:
+        elif window[i-1] <= window[i]:
             cont_val_LBP += "1"
-        else:
-            cont_val_LBP += str(random.randint(0,1)) # randomize for ties
+        # else:
+        #     cont_val_LBP += str(random.randint(0,1)) # randomize for ties
 
-    return np.array([int(cont_val_LBP[i-(d-1):i+1], base=2) for i in range(d, len(window))], dtype=int)
+    # return np.array([int(cont_val_LBP[i-(d-1):i+1], base=2) for i in range(d, len(window))], dtype=int)
+    return np.array([int(cont_val_LBP[i-(d):i], base=2) for i in range(d, len(window))], dtype=int)
 
 
 def compute_lineLength(window):
